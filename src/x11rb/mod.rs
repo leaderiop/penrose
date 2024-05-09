@@ -642,7 +642,12 @@ where
         let root_event_mask = EventMask::PROPERTY_CHANGE
             | EventMask::SUBSTRUCTURE_REDIRECT
             | EventMask::SUBSTRUCTURE_NOTIFY
-            | EventMask::BUTTON_MOTION;
+            | EventMask::BUTTON_MOTION
+            | EventMask::BUTTON_PRESS
+            | EventMask::BUTTON_RELEASE
+            | EventMask::BUTTON1_MOTION
+            | EventMask::BUTTON2_MOTION
+            | EventMask::BUTTON3_MOTION;
 
         let mut aux = ChangeWindowAttributesAux::new();
         for conf in attrs.iter() {
