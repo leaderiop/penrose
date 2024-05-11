@@ -16,12 +16,28 @@ use tracing::trace;
 
 pub mod debug;
 mod simple;
+mod spacer;
 mod sys;
 mod workspaces;
 
 pub use simple::{ActiveWindowName, CurrentLayout, RootWindowName};
+pub use spacer::Spacer;
 pub use sys::{amixer_volume, battery_summary, current_date_and_time, wifi_network};
 pub use workspaces::Workspaces;
+
+/**
+ * The `WidgetAlignment` enum is used to specify the alignment of a widget within the status bar.
+ * The default alignment is `WidgetAlignment::Left`.
+ */
+#[derive(Clone, Debug, PartialEq)]
+pub enum WidgetAlignment {
+    /// Align the widget to the left of the status bar
+    Left,
+    /// Align the widget to the center of the status bar
+    Center,
+    /// Align the widget to the right of the status bar
+    Right,
+}
 
 /// A status bar widget that can be rendered using a [Context]
 pub trait Widget<X>
@@ -48,6 +64,11 @@ where
     /// computed. If multiple greedy widgets are present in a given StatusBar then the available
     /// space will be split evenly between all widgets.
     fn is_greedy(&self) -> bool;
+
+    /// The alignment of this widget within the status bar
+    fn get_alignment(&self) -> WidgetAlignment {
+        WidgetAlignment::Left
+    }
 
     #[allow(unused_variables)]
     /// A startup hook to be run in order to initialise this Widget

@@ -134,6 +134,7 @@ impl<X: XConn> StatusBar<X> {
             let mut greedy_indices = vec![];
 
             for (i, w) in self.widgets.iter_mut().enumerate() {
+                info!("drawing widget: {}", i);
                 extents.push(w.current_extent(&mut ctx, self.h)?);
                 if w.is_greedy() {
                     greedy_indices.push(i)

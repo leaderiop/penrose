@@ -1,6 +1,6 @@
 //! Widgets for the penrose status bar
 use crate::{
-    bar::widgets::Widget,
+    bar::widgets::{Widget, WidgetAlignment},
     core::{Context, TextStyle},
     Result,
 };
@@ -58,6 +58,7 @@ pub struct Workspaces {
     workspaces: Vec<WsMeta>,
     focused_ws: Vec<String>, // focused ws per screen
     extent: Option<(u32, u32)>,
+    alignement: WidgetAlignment,
     fg_1: Color,
     fg_2: Color,
     bg_1: Color,
@@ -67,7 +68,13 @@ pub struct Workspaces {
 
 impl Workspaces {
     /// Construct a new WorkspaceWidget
-    pub fn new(style: TextStyle, highlight: impl Into<Color>, empty_fg: impl Into<Color>) -> Self {
+    pub fn new(
+        style: TextStyle,
+        highlight: impl Into<Color>,
+        empty_fg: impl Into<Color>,
+        alignement: Option<WidgetAlignment>,
+    ) -> Self {
+        let alignement = alignement.unwrap_or(WidgetAlignment::Left);
         Self {
             workspaces: vec![],
             focused_ws: vec![], // set in startup hook
@@ -77,6 +84,7 @@ impl Workspaces {
             bg_1: highlight.into(),
             bg_2: style.bg.unwrap_or_else(|| 0x000000.into()),
             require_draw: true,
+            alignement,
         }
     }
 
@@ -159,13 +167,15 @@ impl<X: XConn> Widget<X> for Workspaces {
     ) -> Result<()> {
         ctx.fill_rect(Rect::new(0, 0, w, h), self.bg_2)?;
         ctx.translate(PADDING as i32, 0);
-        let (_, eh) = <Self as Widget<X>>::current_extent(self, ctx, h)?;
 
         for ws in self.workspaces.iter() {
             let (fg, bg) = self.ws_colors(&ws.tag, screen, screen_has_focus, ws.occupied);
             ctx.fill_rect(Rect::new(0, 0, ws.extent.0, h), bg)?;
-            ctx.draw_text(&ws.tag, h - eh, (PADDING, PADDING), fg)?;
-            ctx.translate(ws.extent.0 as i32, 0);
+            let (tw, th) = ctx.text_extent(&ws.tag)?;
+            let padding_x = (h - tw) / 2;
+            let padding_y = (h - th) / 2;
+            ctx.draw_text(&ws.tag, padding_y, (padding_x, padding_x), fg)?;
+            ctx.translate(h as i32, 0);
         }
 
         self.require_draw = false;
@@ -173,20 +183,17 @@ impl<X: XConn> Widget<X> for Workspaces {
         Ok(())
     }
 
-    fn current_extent(&mut self, ctx: &mut Context<'_>, _h: u32) -> Result<(u32, u32)> {
+    fn current_extent(&mut self, _: &mut Context<'_>, hight: u32) -> Result<(u32, u32)> {
         match self.extent {
             Some(extent) => Ok(extent),
             None => {
                 let mut total = 0;
-                let mut h_max = 0;
                 for ws in self.workspaces.iter_mut() {
-                    let (w, h) = ctx.text_extent(&ws.tag)?;
-                    total += w + 2 * PADDING;
-                    h_max = if h > h_max { h } else { h_max };
-                    ws.extent = (w + 2 * PADDING, h);
+                    total += hight;
+                    ws.extent = (hight, hight);
                 }
 
-                let ext = (total + PADDING, h_max);
+                let ext = (total + PADDING, hight);
                 self.extent = Some(ext);
 
                 Ok(ext)

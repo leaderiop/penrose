@@ -120,7 +120,7 @@ pub fn status_bar<X: XConn>(
         font,
         point_size,
         vec![
-            Box::new(Workspaces::new(style, highlight, empty_ws)),
+            Box::new(Workspaces::new(style, highlight, empty_ws, None)),
             Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
                 max_active_window_chars,
